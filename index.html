@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DFF AI Program Assistant | Dubai Future Foundation</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f4f8; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+  .container { width: 100%; max-width: 780px; }
+  .meta { text-align: center; margin-bottom: 16px; }
+  .meta h1 { font-size: 22px; color: #0a2540; font-weight: 600; }
+  .meta p { font-size: 13px; color: #607d99; margin-top: 4px; }
+  .app { display: flex; flex-direction: column; height: 680px; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 40px rgba(10,37,64,0.15); }
+  .header { background: linear-gradient(135deg, #0a2540 0%, #1a3d5c 100%); padding: 18px 24px; display: flex; align-items: center; gap: 14px; }
+  .logo { width: 40px; height: 40px; border-radius: 10px; background: #1d6fa4; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .header-text h2 { color: #fff; font-size: 17px; font-weight: 600; }
+  .header-text p { color: #8ea8c3; font-size: 12px; margin-top: 2px; }
+  .status { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+  .status span { color: #8ea8c3; font-size: 12px; }
+  .scope-bar { background: #0d2d4a; padding: 10px 16px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+  .scope-bar::-webkit-scrollbar { display: none; }
+  .chip { background: #1a3d5c; color: #7fc4f5; border: 1px solid #2a5070; border-radius: 20px; padding: 5px 14px; font-size: 12px; white-space: nowrap; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .chip:hover { background: #1d6fa4; color: #e0f0ff; border-color: #1d6fa4; }
+  .messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+  .msg { display: flex; gap: 12px; }
+  .msg.user { flex-direction: row-reverse; }
+  .av { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; flex-shrink: 0; }
+  .av.bot { background: #1d6fa4; color: #fff; }
+  .av.user { background: #e1f5ee; color: #0f6e56; font-size: 12px; }
+  .bubble { padding: 12px 16px; border-radius: 14px; font-size: 14px; line-height: 1.65; max-width: 80%; }
+  .msg.bot .bubble { background: #f5f8fb; border: 1px solid #e0e9f2; border-top-left-radius: 4px; color: #1a2a3a; }
+  .msg.user .bubble { background: #0a2540; color: #e0f0ff; border-top-right-radius: 4px; }
+  .typing { display: flex; gap: 5px; align-items: center; padding: 14px 16px; }
+  .tdot { width: 8px; height: 8px; border-radius: 50%; background: #7fc4f5; animation: pulse 1.2s infinite; }
+  .tdot:nth-child(2) { animation-delay: 0.2s; }
+  .tdot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,60%,100%{transform:translateY(0);opacity:0.5} 30%{transform:translateY(-7px);opacity:1} }
+  .sugs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .sug { background: #fff; border: 1px solid #c5d8ec; border-radius: 8px; padding: 5px 11px; font-size: 12px; color: #185fa5; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .sug:hover { background: #e6f1fb; border-color: #7fc4f5; }
+  .tag { background: #e6f1fb; color: #0c447c; border-radius: 4px; padding: 1px 7px; font-size: 12px; font-weight: 500; }
+  .input-area { padding: 16px 20px; border-top: 1px solid #e8eef4; display: flex; gap: 10px; align-items: flex-end; background: #fff; }
+  textarea { flex: 1; resize: none; border: 1px solid #c5d8ec; border-radius: 12px; padding: 10px 14px; font-size: 14px; font-family: inherit; line-height: 1.5; max-height: 100px; background: #f8fbff; outline: none; transition: border 0.15s; }
+  textarea:focus { border-color: #1d6fa4; background: #fff; }
+  .send { width: 42px; height: 42px; border-radius: 12px; background: #1d6fa4; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; flex-shrink: 0; }
+  .send:hover { background: #185fa5; }
+  .send svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .send:disabled { background: #c5d8ec; cursor: not-allowed; }
+  .key-hint { text-align: center; font-size: 11px; color: #a0b0c0; padding: 6px 0 2px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="meta">
+    <h1>DFF AI Program Assistant</h1>
+    <p>Developed by Ayoobkhan Masooth · Program Manager – AI (Consultant) · Dubai Future Foundation</p>
+  </div>
+  <div class="app">
+    <div class="header">
+      <div class="logo">🧠</div>
+      <div class="header-text">
+        <h2>DFF AI Program Assistant</h2>
+        <p>Dubai Future Foundation · AI Strategy & Governance</p>
+      </div>
+      <div class="status"><div class="dot"></div><span>Online</span></div>
+    </div>
+    <div class="scope-bar">
+      <button class="chip" onclick="fill('AI strategy roadmap for government entity')">AI Strategy</button>
+      <button class="chip" onclick="fill('AI governance framework UAE')">Governance</button>
+      <button class="chip" onclick="fill('AI use case identification and prioritisation')">Use Cases</button>
+      <button class="chip" onclick="fill('stakeholder AI readiness assessment')">Readiness</button>
+      <button class="chip" onclick="fill('UAE AI policy alignment Strategy 2031')">Policy</button>
+      <button class="chip" onclick="fill('AI vendor evaluation criteria scorecard')">Vendors</button>
+      <button class="chip" onclick="fill('AI program KPI metrics design')">KPIs</button>
+    </div>
+    <div class="messages" id="msgs">
+      <div class="msg bot">
+        <div class="av bot">🤖</div>
+        <div>
+          <div class="bubble">
+            👋 Welcome to the <strong>DFF AI Program Assistant</strong>.<br><br>
+            I can help with: <span class="tag">AI Strategy</span> <span class="tag">Governance</span> <span class="tag">Use Cases</span> <span class="tag">KPIs</span> <span class="tag">Vendors</span> <span class="tag">Readiness</span><br><br>
+            What would you like to explore?
+          </div>
+          <div class="sugs">
+            <button class="sug" onclick="qs('Draft a 90-day AI program roadmap for a government entity')">Draft 90-day roadmap ↗</button>
+            <button class="sug" onclick="qs('What are the key AI governance pillars for UAE public sector?')">AI governance pillars ↗</button>
+            <button class="sug" onclick="qs('How do I prioritise AI use cases for a government entity?')">Prioritise use cases ↗</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="key-hint">Enter to send · Shift+Enter for new line</div>
+    <div class="input-area">
+      <textarea id="inp" placeholder="Ask about AI strategy, governance, use cases, KPIs..." rows="1"
+        onkeydown="kd(event)" oninput="grow(this)"></textarea>
+      <button class="send" id="sbtn" onclick="send()" aria-label="Send">
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ✅ PRODUCTION: calls YOUR Vercel proxy — API key stays hidden on server
+  const PROXY_URL = '/api/chat';
+
+  const SYSTEM = `You are the DFF AI Program Assistant for Dubai Future Foundation.
+Scope: AI strategy, governance frameworks (UAE AI Strategy 2031), use case prioritisation,
+stakeholder readiness, KPI design, vendor evaluation, change management.
+Tone: Professional, strategic, concise. Tie recommendations to UAE Vision 2031.
+Max 350 words unless asked for a full document.`;
+
+  let hist = [], busy = false;
+  const msgsEl = document.getElementById('msgs');
+  const inp = document.getElementById('inp');
+  const sbtn = document.getElementById('sbtn');
+
+  function grow(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 100) + 'px'; }
+  function kd(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }
+  function fill(t) { inp.value = t; inp.focus(); grow(inp); }
+  function qs(t) { inp.value = t; send(); }
+
+  function addMsg(role, html, sugs = []) {
+    const d = document.createElement('div');
+    d.className = `msg ${role}`;
+    const av = role === 'bot' ? '<div class="av bot">🤖</div>' : '<div class="av user">AM</div>';
+    const sugHtml = sugs.length ? `<div class="sugs">${sugs.map(s => `<button class="sug" onclick="qs('${s.replace(/'/g,"&#39;")}')">${s} ↗</button>`).join('')}</div>` : '';
+    d.innerHTML = `${av}<div><div class="bubble">${html}</div>${sugHtml}</div>`;
+    msgsEl.appendChild(d);
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+  }
+
+  function showTyping() {
+    const d = document.createElement('div');
+    d.className = 'msg bot'; d.id = 'typing';
+    d.innerHTML = `<div class="av bot">🤖</div><div class="bubble typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>`;
+    msgsEl.appendChild(d); msgsEl.scrollTop = msgsEl.scrollHeight;
+  }
+
+  function fmt(t) {
+    return t
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/^### (.+)$/gm, '<strong style="font-size:14px;display:block;margin:8px 0 4px">$1</strong>')
+      .replace(/^## (.+)$/gm, '<strong style="font-size:15px;display:block;margin:10px 0 4px">$1</strong>')
+      .replace(/^- /gm, '• ')
+      .replace(/\n/g, '<br>');
+  }
+
+  async function send() {
+    const text = inp.value.trim();
+    if (!text || busy) return;
+    busy = true; sbtn.disabled = true;
+    inp.value = ''; inp.style.height = 'auto';
+    addMsg('user', text.replace(/</g,'&lt;').replace(/>/g,'&gt;'));
+    hist.push({ role: 'user', content: text });
+    showTyping();
+    try {
+      const res = await fetch(PROXY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          system: SYSTEM,
+          messages: hist
+        })
+      });
+      const data = await res.json();
+      const reply = data.content?.[0]?.text || 'Unable to get a response.';
+      hist.push({ role: 'assistant', content: reply });
+      document.getElementById('typing')?.remove();
+      const sugs = [];
+      if (/roadmap|milestone/i.test(reply)) sugs.push('Convert this to a GANTT timeline');
+      if (/governance|policy/i.test(reply)) sugs.push('Draft a governance committee charter');
+      if (/use case|prioriti/i.test(reply)) sugs.push('Build a use case scoring matrix');
+      if (/kpi|metric/i.test(reply)) sugs.push('Create a KPI dashboard template');
+      addMsg('bot', fmt(reply), sugs.slice(0,3));
+    } catch(e) {
+      document.getElementById('typing')?.remove();
+      addMsg('bot', '⚠️ Connection error. Please check the server is running.');
+    }
+    busy = false; sbtn.disabled = false; inp.focus();
+  }
+</script>
+</body>
+</html>
