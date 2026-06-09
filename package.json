@@ -1,0 +1,6 @@
+{
+  "name": "dff-ai-proxy",
+  "version": "1.0.0",
+  "description": "DFF AI Program Assistant - Backend Proxy",
+  "main": "api/chat.js"
+}
