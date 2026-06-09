@@ -4,3 +4,7 @@
   "description": "DFF AI Program Assistant - Backend Proxy",
   "main": "api/chat.js"
 }
+
+"devDependencies": {
+  "vite": "^5.0.0"
+}
