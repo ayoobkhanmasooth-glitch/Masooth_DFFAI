@@ -1,0 +1,10 @@
+{
+  "name": "economy-tourism-ai-prototype",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Concept prototype: AI services for a UAE economy & tourism government entity",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0"
+  }
+}

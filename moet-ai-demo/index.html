@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Economy &amp; Tourism AI Prototype</title>
+<style>
+  :root {
+    --bg: #f4f6f8; --card: #ffffff; --ink: #14212b; --muted: #5d6b78; --line: #dde3e9;
+    --accent: #0f6b5c; --accent-soft: #e3f2ef; --warn: #b54708; --warn-soft: #fef0e6;
+    --high: #b42318; --high-soft: #fdecea; --user: #eef3f8; --series: #0f6b5c; --forecast: #c2410c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f151a; --card: #172028; --ink: #e6edf2; --muted: #93a2b0; --line: #2a3742;
+      --accent: #4fc3a9; --accent-soft: #163a33; --warn: #f5a25d; --warn-soft: #3a2616;
+      --high: #f97066; --high-soft: #3d1a17; --user: #1e2a35; --series: #4fc3a9; --forecast: #f5a25d;
+    }
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--ink); padding: 24px 16px; line-height: 1.5; }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  header h1 { font-size: 22px; font-weight: 650; }
+  header p { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .notice { font-size: 12px; color: var(--muted); border-left: 3px solid var(--line); padding-left: 10px; margin: 12px 0 18px; }
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .tab { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 8px; padding: 8px 14px; font: inherit; font-size: 14px; cursor: pointer; }
+  .tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+  .panel[hidden] { display: none; }
+  .panel h2 { font-size: 16px; margin-bottom: 4px; }
+  .panel .sub { font-size: 13px; color: var(--muted); margin-bottom: 14px; }
+  .msgs { height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 4px 2px 10px; }
+  .bubble { max-width: 85%; padding: 10px 13px; border-radius: 10px; font-size: 14px; white-space: pre-wrap; }
+  .bubble.bot { background: var(--accent-soft); align-self: flex-start; }
+  .bubble.user { background: var(--user); align-self: flex-end; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
+  .chip { font: inherit; font-size: 12px; border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+  .row { display: flex; gap: 8px; }
+  textarea { flex: 1; font: inherit; font-size: 14px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; resize: vertical; min-height: 44px; }
+  button.primary { font: inherit; font-size: 14px; background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 0 18px; cursor: pointer; min-height: 44px; }
+  button.primary:disabled { opacity: .5; cursor: default; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 14px; }
+  .field { border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+  .field .k { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  .field .v { font-size: 14px; margin-top: 2px; }
+  .field.wide { grid-column: 1 / -1; }
+  .pill { display: inline-block; padding: 1px 9px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+  .pill.low { background: var(--accent-soft); color: var(--accent); }
+  .pill.medium { background: var(--warn-soft); color: var(--warn); }
+  .pill.high { background: var(--high-soft); color: var(--high); }
+  [dir="rtl"] { text-align: right; }
+  .controls { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; font-size: 14px; margin-bottom: 10px; }
+  select, input[type=range] { font: inherit; }
+  select { color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
+  svg { width: 100%; height: auto; display: block; }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .legend span::before { content: ''; display: inline-block; width: 14px; height: 3px; margin-right: 6px; vertical-align: middle; background: var(--series); }
+  .legend span.f::before { background: var(--forecast); }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 14px; }
+  .kpi { border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+  .kpi .n { font-size: 20px; font-weight: 650; }
+  .kpi .l { font-size: 12px; color: var(--muted); }
+  .err { color: var(--high); font-size: 13px; margin-top: 8px; }
+  footer { font-size: 12px; color: var(--muted); margin-top: 18px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Economy &amp; Tourism AI Services: Concept Prototype</h1>
+    <p>Three standalone AI use cases for a UAE economy &amp; tourism government entity · Built by Ayoobkhan Masooth</p>
+  </header>
+  <p class="notice">Independent demo for discussion purposes. Not an official government service. Tourism figures are synthetic sample data.</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-tab="biz">1 · Business Services Assistant</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="cmp">2 · Complaint Triage</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="tour">3 · Tourism Demand Forecast</button>
+  </div>
+
+  <!-- 1. Business services assistant -->
+  <section class="panel" id="biz">
+    <h2>Bilingual Business Services Assistant</h2>
+    <p class="sub">Guides investors and SMEs through licensing, trademarks and commercial procedures, in Arabic or English.</p>
+    <div class="msgs" id="msgs">
+      <div class="bubble bot">Welcome! Ask me how to set up a business, register a trademark, or open a tourism company. مرحباً! يمكنك السؤال بالعربية أيضاً.</div>
+    </div>
+    <div class="chips">
+      <button class="chip" data-q="What are the steps to open a mainland trading company as a foreign investor?">Open a trading company</button>
+      <button class="chip" data-q="How do I register a trademark in the UAE?">Register a trademark</button>
+      <button class="chip" data-q="كيف أحصل على ترخيص لشركة سياحة وسفر؟">ترخيص شركة سياحة</button>
+      <button class="chip" data-q="What support programmes exist for Emirati SMEs?">SME support</button>
+    </div>
+    <div class="row">
+      <textarea id="bizIn" rows="1" placeholder="Type your question… / اكتب سؤالك…"></textarea>
+      <button class="primary" id="bizBtn">Send</button>
+    </div>
+  </section>
+
+  <!-- 2. Complaint triage -->
+  <section class="panel" id="cmp" hidden>
+    <h2>AI Consumer Complaint Triage</h2>
+    <p class="sub">Classifies a complaint, scores urgency, routes it to a team, and drafts a bilingual summary. A human officer still makes the decision.</p>
+    <div class="chips">
+      <button class="chip" data-c="I bought a laptop from an electronics store in Dubai Mall 5 days ago. It stopped working and the store refuses to repair or refund, saying the warranty doesn't cover it even though the box says 1 year warranty.">Warranty refusal</button>
+      <button class="chip" data-c="اشتريت عطراً من متجر إلكتروني بسعر 450 درهم وعند الاستلام تبين أنه مقلد. المتجر لا يرد على الرسائل وهناك الكثير من التقييمات المشابهة.">عطر مقلد</button>
+      <button class="chip" data-c="Our hotel in Ras Al Khaimah advertised a sea-view room with breakfast included. On arrival they charged 300 AED extra per night for breakfast and the room faces the parking lot.">Hotel misleading ad</button>
+    </div>
+    <textarea id="cmpIn" rows="5" style="width:100%" placeholder="Paste a consumer complaint in Arabic or English…"></textarea>
+    <div class="row" style="margin-top:8px"><button class="primary" id="cmpBtn">Analyse complaint</button></div>
+    <div id="cmpOut"></div>
+  </section>
+
+  <!-- 3. Tourism forecast -->
+  <section class="panel" id="tour" hidden>
+    <h2>Tourism Demand Forecast &amp; What-If</h2>
+    <p class="sub">Seasonal forecast of monthly hotel guests (synthetic data), with a campaign what-if slider. Runs entirely in the browser.</p>
+    <div class="controls">
+      <label>Emirate
+        <select id="emirate"></select>
+      </label>
+      <label>Campaign uplift: <strong id="upliftVal">0%</strong>
+        <input type="range" id="uplift" min="0" max="20" step="1" value="0">
+      </label>
+    </div>
+    <svg id="chart" viewBox="0 0 800 300" role="img" aria-label="Monthly hotel guests, actual and forecast"></svg>
+    <div class="legend"><span>Actual (sample)</span><span class="f">Forecast, next 12 months</span></div>
+    <div class="kpis" id="kpis"></div>
+  </section>
+
+  <footer>Prototype stack: Claude API via a serverless proxy (key stays on the server) · human-in-the-loop · no personal data stored</footer>
+</div>
+
+<script>
+  // ---------- tabs ----------
+  document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.setAttribute('aria-selected', x === t));
+    document.querySelectorAll('.panel').forEach(p => p.hidden = p.id !== t.dataset.tab);
+  }));
+
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const isArabic = s => /[؀-ۿ]/.test(s);
+
+  async function callApi(body) {
+    const res = await fetch('/api/assist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+    return data;
+  }
+
+  // ---------- 1. business assistant ----------
+  const hist = [];
+  const msgs = document.getElementById('msgs'), bizIn = document.getElementById('bizIn'), bizBtn = document.getElementById('bizBtn');
+
+  function bubble(role, text) {
+    const d = document.createElement('div');
+    d.className = `bubble ${role}`;
+    if (isArabic(text)) d.dir = 'rtl';
+    d.textContent = text;
+    msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+    return d;
+  }
+
+  async function sendBiz(q) {
+    const text = (q ?? bizIn.value).trim();
+    if (!text || bizBtn.disabled) return;
+    bizIn.value = ''; bizBtn.disabled = true;
+    bubble('user', text);
+    hist.push({ role: 'user', content: text });
+    const wait = bubble('bot', '…');
+    try {
+      const { reply } = await callApi({ mode: 'business', messages: hist.slice(-20) });
+      hist.push({ role: 'assistant', content: reply });
+      wait.textContent = reply.replace(/\*\*/g, '');
+      if (isArabic(reply)) wait.dir = 'rtl';
+    } catch (e) {
+      hist.pop();
+      wait.textContent = '⚠️ ' + e.message;
+    }
+    bizBtn.disabled = false; bizIn.focus();
+  }
+  bizBtn.onclick = () => sendBiz();
+  bizIn.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendBiz(); } };
+  document.querySelectorAll('[data-q]').forEach(b => b.onclick = () => sendBiz(b.dataset.q));
+
+  // ---------- 2. complaint triage ----------
+  const cmpIn = document.getElementById('cmpIn'), cmpBtn = document.getElementById('cmpBtn'), cmpOut = document.getElementById('cmpOut');
+  document.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { cmpIn.value = b.dataset.c; });
+
+  cmpBtn.onclick = async () => {
+    const text = cmpIn.value.trim();
+    if (!text) return;
+    cmpBtn.disabled = true; cmpOut.innerHTML = '<p class="sub" style="margin-top:12px">Analysing…</p>';
+    try {
+      const { result: r } = await callApi({ mode: 'complaint', text });
+      cmpOut.innerHTML = `<div class="grid">
+        <div class="field"><div class="k">Category</div><div class="v">${esc(r.category)}</div></div>
+        <div class="field"><div class="k">Sector</div><div class="v">${esc(r.sector)}</div></div>
+        <div class="field"><div class="k">Urgency</div><div class="v"><span class="pill ${esc(r.urgency)}">${esc(r.urgency)}</span></div></div>
+        <div class="field"><div class="k">Route to</div><div class="v">${esc(r.suggested_team)}</div></div>
+        <div class="field wide"><div class="k">Summary (EN)</div><div class="v">${esc(r.summary_en)}</div></div>
+        <div class="field wide" dir="rtl"><div class="k">الملخص (AR)</div><div class="v">${esc(r.summary_ar)}</div></div>
+        <div class="field wide"><div class="k">Red flags</div><div class="v">${r.red_flags.length ? r.red_flags.map(esc).join(' · ') : 'None detected'}</div></div>
+        <div class="field wide"${isArabic(r.reply_to_consumer) ? ' dir="rtl"' : ''}><div class="k">Draft reply to consumer (for officer review)</div><div class="v">${esc(r.reply_to_consumer)}</div></div>
+      </div>`;
+    } catch (e) {
+      cmpOut.innerHTML = `<p class="err">⚠️ ${esc(e.message)}</p>`;
+    }
+    cmpBtn.disabled = false;
+  };
+
+  // ---------- 3. tourism forecast (synthetic data, runs locally) ----------
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  // Seasonality index: strong winter peak, summer trough (typical Gulf pattern)
+  const SEASON = [1.25, 1.2, 1.15, 1.0, 0.8, 0.65, 0.7, 0.72, 0.85, 1.05, 1.2, 1.33];
+  const EMIRATES = { 'Dubai': [1100, 0.08], 'Abu Dhabi': [520, 0.10], 'Sharjah': [160, 0.07], 'Ras Al Khaimah': [110, 0.12], 'Fujairah': [45, 0.09], 'Ajman': [50, 0.06], 'Umm Al Quwain': [12, 0.05] };
+
+  // Deterministic pseudo-random so the sample data is stable between reloads
+  function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+
+  function sampleSeries(name) {
+    const [base, growth] = EMIRATES[name];
+    const r = rng(name.length * 9973 + base);
+    return Array.from({ length: 36 }, (_, i) => Math.round(base * SEASON[i % 12] * Math.pow(1 + growth, i / 12) * (0.95 + r() * 0.1)));
+  }
+
+  // Seasonal-naive with trend: same month last year × trailing year-on-year growth
+  function forecast(series, uplift) {
+    const last12 = series.slice(-12).reduce((a, b) => a + b, 0);
+    const prev12 = series.slice(-24, -12).reduce((a, b) => a + b, 0);
+    const yoy = last12 / prev12;
+    return { yoy, values: series.slice(-12).map(v => Math.round(v * yoy * (1 + uplift))) };
+  }
+
+  const sel = document.getElementById('emirate'), up = document.getElementById('uplift');
+  Object.keys(EMIRATES).forEach(e => sel.add(new Option(e, e)));
+
+  // Values are in thousands of guests
+  const fmtK = v => v === 0 ? "0" : v >= 1000 ? `${+(v / 1000).toFixed(1)}M` : `${Math.round(v)}k`;
+  function niceStep(raw) {
+    const p = Math.pow(10, Math.floor(Math.log10(raw)));
+    return [1, 2, 2.5, 5, 10].map(m => m * p).find(s => s >= raw);
+  }
+
+  function draw() {
+    const actual = sampleSeries(sel.value), uplift = +up.value / 100;
+    const { yoy, values } = forecast(actual, uplift);
+    document.getElementById('upliftVal').textContent = up.value + '%';
+
+    const all = actual.concat(values), W = 800, H = 300, L = 56, R = 12, T = 14, B = 34;
+    const step = niceStep(Math.max(...all) / 4), max = step * 4, n = all.length;
+    const x = i => L + (i / (n - 1)) * (W - L - R), y = v => T + (1 - v / max) * (H - T - B);
+    const path = (arr, off) => arr.map((v, i) => `${i ? 'L' : 'M'}${x(i + off).toFixed(1)},${y(v).toFixed(1)}`).join('');
+
+    let g = '';
+    for (let k = 0; k <= 4; k++) {
+      const v = (max / 4) * k;
+      g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/>` +
+           `<text x="${L - 8}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${fmtK(v)}</text>`;
+    }
+    for (let i = 0; i < n; i += 6) {
+      const yr = 2023 + Math.floor(i / 12);
+      g += `<text x="${x(i)}" y="${H - 12}" text-anchor="middle" font-size="11" fill="var(--muted)">${MONTHS[i % 12]} ${yr}</text>`;
+    }
+    g += `<line x1="${x(35)}" x2="${x(35)}" y1="${T}" y2="${H - B}" stroke="var(--muted)" stroke-dasharray="3 4"/>`;
+    g += `<path d="${path(actual, 0)}" fill="none" stroke="var(--series)" stroke-width="2.5"/>`;
+    g += `<path d="${path([actual[35], ...values], 35)}" fill="none" stroke="var(--forecast)" stroke-width="2.5" stroke-dasharray="6 4"/>`;
+    document.getElementById('chart').innerHTML = g;
+
+    const total = values.reduce((a, b) => a + b, 0), peak = values.indexOf(Math.max(...values)), low = values.indexOf(Math.min(...values));
+    const baseTotal = forecast(actual, 0).values.reduce((a, b) => a + b, 0);
+    document.getElementById('kpis').innerHTML = [
+      [`${(total / 1000).toFixed(1)}M`, 'Forecast guests, next 12 months'],
+      [`${((yoy - 1) * 100).toFixed(1)}%`, 'Underlying YoY growth'],
+      [`+${((total - baseTotal) / 1000).toFixed(2)}M`, 'Extra guests from campaign'],
+      [`${MONTHS[peak]} / ${MONTHS[low]}`, 'Peak / low month: target the low season'],
+    ].map(([nv, l]) => `<div class="kpi"><div class="n">${nv}</div><div class="l">${l}</div></div>`).join('');
+  }
+  sel.onchange = draw; up.oninput = draw; draw();
+</script>
+</body>
+</html>
